@@ -8,7 +8,7 @@ It runs in any modern browser, on desktop or phone. No build step, no dependenci
 
 ## Play
 
-- **Walk:** arrows or WASD (or the on-screen d-pad, or tap the map)
+- **Walk:** arrows or WASD (or the on-screen thumb stick, or tap the map)
 - **Act / confirm:** Space, E or Enter (or **A**)
 - **Back:** Esc (or **B**)
 - **Mute:** M
