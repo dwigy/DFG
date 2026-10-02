@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ashen Keep</title>
+<meta name="description" content="An 8-bit dark fantasy castle tycoon. Rebuild a ruined keep around the last ember of a dead sun.">
+<meta name="theme-color" content="#0d0b14">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jacquard+12&family=VT323&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="at-title">
+<!--BODY-->
+<div id="app">
+  <header id="hud">
+    <div class="hud-day">
+      <img data-icon="sun" id="hud-phase">
+      <span id="hud-day">Day 1</span>
+      <span class="clock" aria-hidden="true"><i id="hud-clock"></i></span>
+    </div>
+    <div class="hud-res">
+      <span class="res" title="Gold"><img data-icon="gold"><b id="r-gold">0</b></span>
+      <span class="res" title="Timber"><img data-icon="timber"><b id="r-timber">0</b></span>
+      <span class="res" title="Stone"><img data-icon="stone"><b id="r-stone">0</b></span>
+      <span class="res" title="Food"><img data-icon="food"><b id="r-food">0</b></span>
+      <span class="res" title="Folk housed / capacity"><img data-icon="folk"><b id="r-folk">0</b></span>
+      <span class="res" title="Dread"><img data-icon="dread"><b id="r-dread">0</b></span>
+    </div>
+    <button id="btn-mute" class="icon-btn" type="button" aria-label="Toggle sound"><img data-icon="flame"><span>Sound</span></button>
+  </header>
+
+  <main id="stage">
+    <canvas id="game" width="320" height="180" aria-label="Ashen Keep game view"></canvas>
+    <div id="battle-hud" hidden></div>
+    <div id="toasts" aria-live="polite"></div>
+    <div id="title">
+      <p class="pre">A tale of the Long Dusk</p>
+      <h1>Ashen Keep</h1>
+      <p class="sub">Rebuild a fallen castle around the last ember of a dead sun.</p>
+    </div>
+  </main>
+
+  <section id="dock">
+    <div id="title-menu"></div>
+    <p id="objective" hidden></p>
+    <p id="prompt"></p>
+    <div id="dialog" hidden>
+      <canvas id="portrait" width="16" height="16"></canvas>
+      <div class="dlg-body">
+        <p id="dlg-name"></p>
+        <p id="dlg-text"></p>
+        <div id="dlg-choices"></div>
+      </div>
+    </div>
+    <div id="battle" hidden>
+      <div id="blog" aria-live="polite"></div>
+      <div id="bactions"></div>
+    </div>
+  </section>
+
+  <nav id="pad" aria-label="Touch controls">
+    <div class="dpad">
+      <button type="button" data-pad="up" class="up" aria-label="Up">&#9650;</button>
+      <button type="button" data-pad="left" class="left" aria-label="Left">&#9664;</button>
+      <button type="button" data-pad="right" class="right" aria-label="Right">&#9654;</button>
+      <button type="button" data-pad="down" class="down" aria-label="Down">&#9660;</button>
+    </div>
+    <div class="ab">
+      <button type="button" data-pad="b" class="b" aria-label="Back">B</button>
+      <button type="button" data-pad="a" class="a" aria-label="Act">A</button>
+    </div>
+  </nav>
+
+  <footer id="keys">Arrows / WASD to walk &middot; Space or E to act &middot; Esc to go back &middot; M to mute &middot; progress saves automatically</footer>
+
+  <div id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div class="card">
+      <h2 id="m-title"></h2>
+      <div id="m-body"></div>
+      <div id="m-actions"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/data.js"></script>
+<script src="js/state.js"></script>
+<script src="js/lighting.js"></script>
+<script src="js/world.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/story.js"></script>
+<script src="js/keep.js"></script>
+<script src="js/expedition.js"></script>
+<script src="js/main.js"></script>
+<!--/BODY-->
+</body>
+</html>
