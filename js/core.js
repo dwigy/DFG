@@ -20,6 +20,11 @@ G.mulberry = function (seed) {
   };
 };
 
+// Short vibration on phones that support it (Android); silently ignored elsewhere.
+G.buzz = function (pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+};
+
 // ---------- Input ----------
 G.Input = (function () {
   const held = { up: false, down: false, left: false, right: false };
@@ -49,22 +54,59 @@ G.Input = (function () {
   });
   window.addEventListener('blur', () => { for (const k in held) held[k] = false; });
 
-  // Touch pad
+  // Touch pad: a thumb stick (slide to steer, diagonals allowed) plus A and B.
   function bindPad() {
+    const stick = document.querySelector('[data-stick]');
+    if (stick) {
+      const knob = stick.querySelector('i');
+      let id = null;
+      const DIRS = [['right'], ['right', 'down'], ['down'], ['down', 'left'], ['left'], ['left', 'up'], ['up'], ['up', 'right']];
+      const set = (dirs) => {
+        for (const k of ['up', 'down', 'left', 'right']) {
+          const on = dirs.indexOf(k) >= 0;
+          if (on && !held[k]) press(k);
+          held[k] = on;
+        }
+      };
+      const move = (e) => {
+        const r = stick.getBoundingClientRect();
+        const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+        const max = r.width / 2, d = Math.hypot(dx, dy);
+        const k = Math.min(1, max / Math.max(1, d)) * 0.6;
+        knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+        if (d < max * 0.22) { set([]); return; }
+        const sector = (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8;
+        set(DIRS[sector]);
+      };
+      const end = (e) => {
+        if (e.pointerId !== id) return;
+        id = null; set([]);
+        knob.style.transform = '';
+        stick.classList.remove('on');
+      };
+      stick.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        id = e.pointerId;
+        try { stick.setPointerCapture(id); } catch (err) {}
+        stick.classList.add('on');
+        G.Audio && G.Audio.unlock();
+        move(e);
+      });
+      stick.addEventListener('pointermove', (e) => { if (e.pointerId === id) move(e); });
+      stick.addEventListener('pointerup', end);
+      stick.addEventListener('pointercancel', end);
+      stick.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
     document.querySelectorAll('[data-pad]').forEach((btn) => {
       const k = btn.dataset.pad;
-      const down = (e) => {
+      btn.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         btn.classList.add('on');
-        if (k in held) { held[k] = true; press(k); } else press(k);
+        press(k);
+        G.buzz(8);
         G.Audio && G.Audio.unlock();
-      };
-      const up = (e) => {
-        e.preventDefault();
-        btn.classList.remove('on');
-        if (k in held) held[k] = false;
-      };
-      btn.addEventListener('pointerdown', down);
+      });
+      const up = () => btn.classList.remove('on');
       btn.addEventListener('pointerup', up);
       btn.addEventListener('pointerleave', up);
       btn.addEventListener('pointercancel', up);

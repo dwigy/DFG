@@ -50,7 +50,12 @@ G.UI = (function () {
     setTimeout(() => d.remove(), 4400);
   }
   function objective(text) { el.objective.hidden = !text; el.objective.innerHTML = text ? `<span class="obj-mark">Objective</span> ${text}` : ''; }
-  function prompt(text) { el.prompt.innerHTML = text ? `<kbd>A</kbd> ${text}` : '<span class="hint">Walk with the arrows or WASD. Space acts. Tap the map to walk there.</span>'; }
+  const touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+  function prompt(text) {
+    el.prompt.classList.toggle('live', !!text);
+    el.prompt.innerHTML = text ? `<kbd>A</kbd> ${text}${touch ? ' <span class="tap">tap</span>' : ''}`
+      : `<span class="hint">${touch ? 'Drag the stick to walk, or tap anything in the Keep to go to it.' : 'Walk with the arrows or WASD. Space acts. Click the map to walk there.'}</span>`;
+  }
 
   // ---------- menu navigation ----------
   function pushMenu(root, orient) {
@@ -286,6 +291,8 @@ G.UI = (function () {
   return {
     init, hud, toast, objective, prompt, say, choose, scene, closeDialog, openPanel, closePanel, drawPanel,
     costHTML, handleInput, isBlocking, battleShow, blog, bactions, bhud, titleMenu,
+    // Tap anywhere on the game view to move dialogue along.
+    tapAdvance() { if (!el.dialog.hidden && (advance || (typing && !typing.done))) { pressA(); return true; } return false; },
     get panelOpen() { return !!panelState; },
   };
 })();

@@ -480,13 +480,13 @@ G.World = (function () {
   function interactables() {
     const S = G.S, list = [];
     list.push({ kind: 'hearth', x: HEARTH.tx * TS + 16, y: HEARTH.ty * TS + 16, r: 30, label: S.hearth ? `The Hearth (Lv ${S.hearth})` : 'Kneel at the cold hearth' });
-    list.push({ kind: 'keep', x: KEEP.tx * TS + 64, y: (KEEP.ty + KEEP.h) * TS + 6, r: 22, label: `The Keep (Lv ${S.keep}) - ledger & rest` });
+    list.push({ kind: 'keep', x: KEEP.tx * TS + 64, y: (KEEP.ty + KEEP.h) * TS + 6, r: 22, label: `The Keep (Lv ${S.keep}) - ledger & rest`, box: [KEEP.tx * TS + 36, 0, KEEP.tx * TS + 92, (KEEP.ty + KEEP.h) * TS + 14] });
     list.push({ kind: 'gate', x: 20 * TS, y: (MH - 2) * TS - 4, r: 22, label: 'The Gate - venture out' });
     for (const id in G.BUILDINGS) {
       const B = G.BUILDINGS[id];
       const [tx, ty] = B.tile;
       const L = S.b[id];
-      list.push({ kind: 'plot', id, x: tx * TS + 24, y: ty * TS + 52, r: 20, label: L ? `${B.name} (Lv ${L})` : G.Keep.plotLabel(id) });
+      list.push({ kind: 'plot', id, x: tx * TS + 24, y: ty * TS + 52, r: 20, label: L ? `${B.name} (Lv ${L})` : G.Keep.plotLabel(id), box: [tx * TS, ty * TS - 24, tx * TS + 48, ty * TS + 56] });
     }
     for (const n of npcs) if (!n.temp) list.push({ kind: 'npc', id: n.id, x: n.x, y: n.y, r: 18, label: `Talk to ${G.Story.speakerName(n.id)}`, npc: n });
     return list;
@@ -496,6 +496,16 @@ G.World = (function () {
     for (const it of interactables()) {
       const d = Math.hypot(it.x - hero.x, it.y - hero.y);
       if (d < it.r && d < bd) { bd = d; best = it; }
+    }
+    return best;
+  }
+  // What did the player tap? Buildings count anywhere on their picture.
+  function itemAt(px, py) {
+    let best = null, bd = 1e9;
+    for (const it of interactables()) {
+      if (it.box && px >= it.box[0] && px <= it.box[2] && py >= it.box[1] && py <= it.box[3]) return it;
+      const d = Math.min(Math.hypot(it.x - px, it.y - py), it.kind === 'npc' ? Math.hypot(it.x - px, it.y - 8 - py) : 1e9);
+      if (d < it.r + 12 && d < bd) { bd = d; best = it; }
     }
     return best;
   }
@@ -535,7 +545,7 @@ G.World = (function () {
       if (p.ash) p.vx = Math.sin(G.t * 1.3 + p.seed) * 6;
       if (p.life <= 0) particles.splice(i, 1);
     }
-    if (Math.random() < 0.6) particles.push({ ash: true, x: cam.x + G.rand(-20, 340), y: cam.y - 4, vx: 0, vy: G.rand(6, 14), life: 16, col: Math.random() < 0.6 ? '#6b6584' : '#9a94ad', s: 1, seed: Math.random() * 9 });
+    if (Math.random() < 0.6) particles.push({ ash: true, x: cam.x + G.rand(-20, G.W + 20), y: cam.y - 4, vx: 0, vy: G.rand(6, 14), life: 16, col: Math.random() < 0.6 ? '#6b6584' : '#9a94ad', s: 1, seed: Math.random() * 9 });
 
     // eyes in the dark
     if (G.Eco.isNight(S.time) || G.scene === 'title') {
@@ -620,7 +630,7 @@ G.World = (function () {
   function placeHero(x, y, dir) { hero.x = x; hero.y = y; hero.dir = dir || 'up'; G.Input.target = null; }
 
   return {
-    TS, MW, MH, hero, cam, npcs, buildMap, syncNPCs, update, render, nearest, placeHero, screenToWorld,
+    TS, MW, MH, hero, cam, npcs, buildMap, syncNPCs, update, render, nearest, itemAt, placeHero, screenToWorld,
     spawnTemp, removeTemp, HEARTH, KEEP,
     plotPoint(id) { const [tx, ty] = G.BUILDINGS[id].tile; return { x: tx * TS + 24, y: ty * TS + 10 }; },
     gatePoint() { return { x: 20 * TS, y: (MH - 2) * TS - 18 }; },

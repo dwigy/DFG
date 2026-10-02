@@ -139,9 +139,14 @@ G.Audio = (function () {
     step() { const t = ctx.currentTime; noise(t, 0.03, 0.03, null, 2000); },
   };
 
+  const HAPTIC = { hit: 14, hurt: 45, build: 25, ember: 35, level: [30, 50, 30], deny: 20, bell: 60 };
+
   return {
     unlock, play,
-    sfx(name, arg) { if (ctx && !muted && SFX[name]) SFX[name](arg); },
+    sfx(name, arg) {
+      if (HAPTIC[name]) G.buzz(HAPTIC[name]);
+      if (ctx && !muted && SFX[name]) SFX[name](arg);
+    },
     toggleMute() {
       muted = !muted;
       try { localStorage.setItem('ashenkeep.muted', muted ? '1' : '0'); } catch (e) {}

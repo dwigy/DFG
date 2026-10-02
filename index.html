@@ -6,6 +6,13 @@
 <title>Ashen Keep</title>
 <meta name="description" content="An 8-bit dark fantasy castle tycoon. Rebuild a ruined keep around the last ember of a dead sun.">
 <meta name="theme-color" content="#0d0b14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ashen Keep">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jacquard+12&family=VT323&display=swap">
@@ -61,12 +68,7 @@
   </section>
 
   <nav id="pad" aria-label="Touch controls">
-    <div class="dpad">
-      <button type="button" data-pad="up" class="up" aria-label="Up">&#9650;</button>
-      <button type="button" data-pad="left" class="left" aria-label="Left">&#9664;</button>
-      <button type="button" data-pad="right" class="right" aria-label="Right">&#9654;</button>
-      <button type="button" data-pad="down" class="down" aria-label="Down">&#9660;</button>
-    </div>
+    <div class="stick" data-stick role="group" aria-label="Movement stick"><i></i></div>
     <div class="ab">
       <button type="button" data-pad="b" class="b" aria-label="Back">B</button>
       <button type="button" data-pad="a" class="a" aria-label="Act">A</button>

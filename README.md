@@ -13,6 +13,8 @@ It runs in any modern browser, on desktop or phone. No build step, no dependenci
 - **Back:** Esc (or **B**)
 - **Mute:** M
 
+On phones the game fills the screen in portrait or landscape: drag the thumb stick to walk, or tap any building or person to walk over and use them. Tap the game view to move dialogue along. On Android you'll feel hits and builds as vibrations, and the screen stays awake while you play. From the browser's share menu, **Add to Home Screen** installs it like an app.
+
 Progress saves automatically in your browser. While you're away, your folk keep working at half pace for up to two hours.
 
 ## How the game works
@@ -57,6 +59,7 @@ Opening `index.html` directly from disk also works.
 
 ```
 index.html        page shell, HUD, dock, touch pad
+manifest.webmanifest, icons/   home-screen app install
 css/style.css     the whole look
 js/core.js        namespace, helpers, keyboard and touch input
 js/sprites.js     palette, pixel sprites drawn from strings, icons, 3x5 number font
