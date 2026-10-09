@@ -1,0 +1,16 @@
+{
+  "name": "Culture Clubhouse Sudoku",
+  "short_name": "CC Sudoku",
+  "description": "Sudoku by Culture Clubhouse. Easy, Normal, Hard, Extreme.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4EFE6",
+  "theme_color": "#F4EFE6",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

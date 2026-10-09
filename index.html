@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Clubhouse Sudoku</title>
+<meta name="description" content="Culture Clubhouse Sudoku. Four difficulties: Easy, Normal, Hard, Extreme. The future creates.">
+<meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E0E10" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CC Sudoku">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">CC</span>
+      <span class="brand-text">
+        <span class="brand-name">Culture Clubhouse</span>
+        <span class="brand-sub">Sudoku</span>
+      </span>
+    </div>
+    <button class="icon-btn" id="btn-menu" type="button" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+    </button>
+  </header>
+
+  <nav class="levels" role="tablist" aria-label="Difficulty">
+    <button type="button" role="tab" data-level="easy">Easy</button>
+    <button type="button" role="tab" data-level="normal">Normal</button>
+    <button type="button" role="tab" data-level="hard">Hard</button>
+    <button type="button" role="tab" data-level="extreme">Extreme</button>
+    <span class="levels-pill" aria-hidden="true"></span>
+  </nav>
+
+  <div class="status">
+    <div class="stat"><span class="stat-label">Mistakes</span><span class="stat-val" id="mistakes">0</span></div>
+    <button class="timer" id="btn-pause" type="button" aria-label="Pause">
+      <span id="timer">0:00</span>
+      <svg class="ico-pause" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+    </button>
+    <div class="stat stat-right"><span class="stat-label">Best</span><span class="stat-val" id="best">—</span></div>
+  </div>
+
+  <main class="board-area"><div class="board-wrap">
+    <div class="board" id="board" role="grid" aria-label="Sudoku board"></div>
+    <div class="overlay" id="paused" hidden>
+      <button type="button" class="btn-primary" id="btn-resume">Resume</button>
+    </div>
+    <div class="overlay loading" id="loading" hidden><span class="spinner"></span><span id="loading-text">Building puzzle</span></div>
+  </div></main>
+
+  <div class="tools">
+    <button type="button" class="tool" id="t-undo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Undo</span></button>
+    <button type="button" class="tool" id="t-erase"><svg viewBox="0 0 24 24"><path d="M20 20H9L4 15a2 2 0 0 1 0-2.8L13.2 3a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L11 19M7.5 9.5l7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Erase</span></button>
+    <button type="button" class="tool" id="t-notes" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Notes</span><b class="badge">Off</b></button>
+    <button type="button" class="tool" id="t-hint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Hint</span><b class="badge" id="hints-left">3</b></button>
+  </div>
+
+  <div class="pad" id="pad"></div>
+
+  <footer class="foot">The future creates.</footer>
+</div>
+
+<!-- Sheet: menu / confirm / win -->
+<div class="scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="sheet-grip" aria-hidden="true"></div>
+  <h2 id="sheet-title"></h2>
+  <div id="sheet-body"></div>
+  <div class="sheet-actions" id="sheet-actions"></div>
+</section>
+
+<script src="sudoku.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
