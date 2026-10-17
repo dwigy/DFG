@@ -8,8 +8,9 @@
 //   3. If every relay comes back blocked or incomplete, Jina's text version
 //      of the page and Microlink's metadata fill in title, photo and price.
 //
-// Each relay is tried until one yields a complete item; otherwise the most
-// complete result wins.
+// With a private relay connected (relay/worker.js on Cloudflare), it goes
+// first. Each relay is tried until one yields a complete item; otherwise the
+// most complete result wins.
 import { buildItem } from '../lib/build.js';
 import { FetchError } from '../lib/url.js';
 import { parsePrice, detectCurrency } from '../lib/extract.js';
@@ -26,26 +27,39 @@ const RELAYS = [
 const MAX_CHARS = 6 * 1024 * 1024;
 const TOTAL_BUDGET_MS = 35000;
 
-// The relay that last produced a complete item is tried first next time.
-let preferred = 0;
+// The public relay that last produced a complete item is tried first next time.
+let preferred = 'jina';
 
-async function viaRelay(relay, href, timeoutMs) {
-  const res = await fetch(relay.url(href), { headers: relay.headers, signal: AbortSignal.timeout(timeoutMs) });
+function ownRelay(relayUrl) {
+  const base = relayUrl.replace(/\/+$/, '');
+  return { name: 'your relay', url: (u) => `${base}/?url=${enc(u)}`, own: true };
+}
+
+async function viaRelay(relay, href, timeoutMs, accept) {
+  const headers = { ...relay.headers, ...(relay.own && accept ? { Accept: accept } : {}) };
+  const res = await fetch(relay.url(href), { headers, signal: AbortSignal.timeout(timeoutMs) });
   const body = (await res.text()).slice(0, MAX_CHARS);
-  return { status: res.status, contentType: res.headers.get('content-type') || '', body };
+  // Your relay reports where redirects ended (short links, region redirects).
+  const finalUrl = res.headers.get('x-final-url');
+  return { status: res.status, contentType: res.headers.get('content-type') || '', body, finalUrl };
 }
 
 // Fetcher bound to one relay. JSON requests (Shopify's product endpoint) skip
 // the rendering relay, which would wrap the JSON in HTML.
-function fetcherFor(relay) {
+function fetcherFor(relay, relays) {
   return async (input, { accept, timeoutMs = 20000 } = {}) => {
     const url = input instanceof URL ? input : new URL(input);
     if (!/^https?:$/.test(url.protocol)) throw new FetchError('Only http(s) links are supported', 400);
-    const candidates = accept?.includes('json') && relay.rendered ? RELAYS.filter((r) => !r.rendered) : [relay];
+    const candidates = accept?.includes('json') && relay.rendered ? relays.filter((r) => !r.rendered) : [relay];
     let last;
     for (const r of candidates) {
       try {
-        last = { url, ...(await viaRelay(r, url.href, timeoutMs)) };
+        const { finalUrl, ...res } = await viaRelay(r, url.href, timeoutMs, accept);
+        let resolved = url;
+        try {
+          if (finalUrl) resolved = new URL(finalUrl);
+        } catch { /* keep the requested URL */ }
+        last = { url: resolved, ...res };
         if (last.status < 400 && last.body) return last;
       } catch {
         // Relay down, slow, rate limited or refused: try the next candidate.
@@ -128,19 +142,25 @@ async function microlinkFallback(href) {
 
 // ---------- entry point ----------
 
-export async function extractInBrowser(url) {
+/**
+ * @param {string} url
+ * @param {{relayUrl?: string}} [opts] relayUrl: your Cloudflare relay, tried first
+ */
+export async function extractInBrowser(url, { relayUrl } = {}) {
   const started = Date.now();
-  const order = [...RELAYS.slice(preferred), ...RELAYS.slice(0, preferred)];
+  const i = Math.max(0, RELAYS.findIndex((r) => r.name === preferred));
+  const publicOrder = [...RELAYS.slice(i), ...RELAYS.slice(0, i)];
+  const order = relayUrl ? [ownRelay(relayUrl), ...publicOrder] : publicOrder;
   let best = null;
 
   for (const relay of order) {
     if (Date.now() - started > TOTAL_BUDGET_MS) break;
     try {
-      const result = await buildItem(url, { fetchPage: fetcherFor(relay) });
+      const result = await buildItem(url, { fetchPage: fetcherFor(relay, order) });
       result.item.via = relay.name;
       if (score(result) > score(best) || !best) best = result;
       if (complete(result)) {
-        preferred = RELAYS.indexOf(relay);
+        if (!relay.own) preferred = relay.name;
         return result;
       }
     } catch (err) {
@@ -180,4 +200,15 @@ export async function extractInBrowser(url) {
   best.missing = ['price', 'image'].filter((k) => !best.item[k] && best.item[k] !== 0);
   if (best.blocked && (best.item.image || best.item.price != null)) best.blocked = false;
   return best;
+}
+
+/** Check a relay URL: resolves true when it answers for this site. */
+export async function testRelay(relayUrl) {
+  try {
+    const res = await fetch(`${relayUrl.replace(/\/+$/, '')}/`, { signal: AbortSignal.timeout(10000) });
+    const data = await res.json();
+    return res.ok && data.ok === true;
+  } catch {
+    return false;
+  }
 }

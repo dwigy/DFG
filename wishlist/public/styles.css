@@ -366,3 +366,7 @@ dialog::backdrop { background: rgb(0 0 0 / 0.5); backdrop-filter: blur(2px); }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+.relay-status { font-size: 14px; min-height: 1.2em; color: var(--muted); }
+.relay-status.bad { color: var(--bad); }
+.sheet-body a { color: var(--brand); }

@@ -1,0 +1,7 @@
+name = "wishlist-relay"
+main = "worker.js"
+compatibility_date = "2025-09-01"
+
+# Optional: extra sites allowed to use the relay (comma-separated)
+# [vars]
+# ALLOWED_ORIGINS = "https://wishlist.example.com"

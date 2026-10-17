@@ -32,6 +32,8 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
         </button>
         <div class="menu" id="menu" role="menu" hidden>
+          <button role="menuitem" data-action="relay" id="relayMenuItem">Connect your relay</button>
+          <hr>
           <button role="menuitem" data-action="refresh-all">Check all prices</button>
           <button role="menuitem" data-action="share">Copy list to share</button>
           <button role="menuitem" data-action="bookmarklet">Add from any website</button>
@@ -135,6 +137,25 @@
         <button value="cancel" class="ghost">Cancel</button>
         <button value="save" class="primary">Save</button>
       </footer>
+    </form>
+  </dialog>
+
+  <dialog id="relayDlg" class="sheet small">
+    <form id="relayForm" method="dialog">
+      <header class="sheet-head">
+        <h2>Your relay</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">✕</button>
+      </header>
+      <div class="sheet-body">
+        <p class="muted">Your own free Cloudflare relay reads store pages for this app only, so you're not sharing slow public services.
+          <a href="https://github.com/dwigy/DFG/blob/claude/8bit-dark-fantasy-game-2n7iib/wishlist/relay/README.md" target="_blank" rel="noopener">Setup guide (5 minutes)</a></p>
+        <input id="relayInput" type="text" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="https://wishlist-relay.yourname.workers.dev" aria-label="Relay address">
+        <p id="relayStatus" class="relay-status" role="status"></p>
+        <div class="add-row">
+          <button type="button" class="ghost" id="relayRemove">Disconnect</button>
+          <button type="submit" class="primary">Test &amp; save</button>
+        </div>
+      </div>
     </form>
   </dialog>
 
