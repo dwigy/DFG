@@ -370,3 +370,4 @@ dialog::backdrop { background: rgb(0 0 0 / 0.5); backdrop-filter: blur(2px); }
 .relay-status { font-size: 14px; min-height: 1.2em; color: var(--muted); }
 .relay-status.bad { color: var(--bad); }
 .sheet-body a { color: var(--brand); }
+.deploy { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 600; color: var(--text) !important; }

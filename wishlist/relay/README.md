@@ -5,19 +5,24 @@ Browsers can't read other websites directly, so the Wishlist app needs a helper 
 **Cost:** free. Cloudflare's free plan allows 100,000 requests a day; a wishlist uses a handful.
 **Time:** about 5 minutes, easiest on a computer.
 
-## Set it up
+## Set it up (one click)
 
-1. **Create a free Cloudflare account** at https://dash.cloudflare.com/sign-up and verify your email.
-2. In the dashboard sidebar, open **Workers & Pages** (it may be under **Compute**), then click **Create** → **Create Worker** (or **Start with Hello World**).
-3. Name it `wishlist-relay` and click **Deploy**. Cloudflare creates a placeholder worker.
-4. Click **Edit code**. Delete everything in the editor.
-5. Open the relay code: https://raw.githubusercontent.com/dwigy/DFG/claude/8bit-dark-fantasy-game-2n7iib/wishlist/relay/worker.js. Select all, copy, and paste it into the editor.
-6. Click **Deploy**.
-7. Copy your worker's address. It looks like `https://wishlist-relay.YOUR-NAME.workers.dev`.
-8. **Check it:** open that address in your browser. You should see `{"error":"This relay only serves the Wishlist app."}`. That means it's running and refusing everyone except your app.
-9. **Connect it:** open the Wishlist app, tap **⋯** → **Connect your relay**, paste the address and tap **Test & save**. The menu then shows **Your relay: connected ✓**.
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/dwigy/DFG/tree/claude/8bit-dark-fantasy-game-2n7iib/wishlist/relay)
 
-Do step 9 on each device you use, or send the address to Claude to build it into the app so every device uses it automatically.
+1. Click **Deploy to Cloudflare** above. If you don't have a Cloudflare account, sign up on that screen; it's free, and you can use Google or GitHub to sign in.
+2. Cloudflare asks to connect GitHub so it can copy the relay code into a new repository of yours. Allow it, keep the name `wishlist-relay`, and click **Deploy**.
+3. When it finishes, copy the worker's address. It looks like `https://wishlist-relay.YOUR-NAME.workers.dev`.
+4. In the Wishlist app, tap **⋯** → **Connect your relay**, paste the address and tap **Test & save**. The menu then shows **Your relay: connected ✓**.
+
+Do step 4 on each device you use, or send the address to Claude to build it into the app so every device uses it automatically.
+
+## Set it up by hand (if the button doesn't work)
+
+1. Create a free account at https://dash.cloudflare.com/sign-up.
+2. Open **Workers & Pages** (it may be under **Compute**) → **Create** → **Create Worker**, name it `wishlist-relay`, click **Deploy**.
+3. Click **Edit code**, delete everything, paste in the code from https://raw.githubusercontent.com/dwigy/DFG/claude/8bit-dark-fantasy-game-2n7iib/wishlist/relay/worker.js and click **Deploy**.
+4. Opening the worker's address in a browser should show `{"error":"This relay only serves the Wishlist app."}`. That means it's running.
+5. Connect it in the app as in step 4 above.
 
 ## Using it from another address
 
