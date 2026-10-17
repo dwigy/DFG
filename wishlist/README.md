@@ -52,14 +52,14 @@ If a store blocks automated reading (captcha or 403), the item is still added, w
 
 ## Features
 
-- **Auto categories**: 16 categories (Clothing, Shoes, Electronics, Home, Kitchen, Beauty, and more) with a specific type (Sneakers, Headphones, Dutch Oven) and tags for brand, gender, sale and price range
-- Filter by category chips and tags (tags combine), search, and sort by price, newest or biggest price drop, or group by category or store
-- Pick your size and color on each card
-- **Price tracking**: ↻ re-checks one item, and "Check all prices" in the menu checks everything. Drops show up as badges.
-- Pin favorites, mark items purchased, add notes, edit any field, and choose a different photo from the ones found on the page
-- **Add from anywhere**: paste a link anywhere on the page, use the bookmarklet (menu → "Add-from-any-site button"), or install the app on Android and share links into it
-- Export and import as JSON, or copy the list as text to share
-- Works on phones and supports dark mode
+- **Shop (home):** your wishlist laid out like a store, with New arrivals, Favorites, Shop by category, Small gifts (you pick the limit: $25 to $150), Big gifts ($250+), On sale, and a shelf for each main category. Every shelf has "See all".
+- **Full list:** search, one row of filters (favorites, sale, price, category, got it) and a sort
+- **Clean cards:** a 3:2 photo with the name and price
+- **Item view** (tap any card): full photo and gallery (tap a photo to make it the cover), the button to shop, your size and color, notes, section, favorite, got it, price check, edit and remove
+- **Auto categories:** 16 sections with a specific type (Sneakers, Headphones, Dutch Oven)
+- **Price tracking:** "Check price" on one item, or "Check all prices" in the ⋯ menu. Drops show up as badges and in the On sale shelf.
+- **Add from anywhere:** the + button, pasting a link anywhere on the page, the bookmarklet, or sharing from your phone (Android, once installed)
+- Backup export and import, a copyable list to share, works on phones, supports dark mode
 
 Your list is saved in your browser (localStorage). The server never stores anything; it only reads product pages.
 
