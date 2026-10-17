@@ -1,0 +1,18 @@
+{
+  "name": "Smart Wishlist",
+  "short_name": "Wishlist",
+  "description": "Paste a product link; get the photo, price, sizes, colors and a category automatically.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5f2",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "params": { "title": "title", "text": "text", "url": "url" }
+  }
+}

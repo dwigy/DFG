@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Smart Wishlist</title>
+  <meta name="description" content="Paste a product link. Get the photo, price, sizes, colors and a category automatically.">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 28s-11-6.6-11-15a6 6 0 0 1 11-3.3A6 6 0 0 1 27 13c0 8.4-11 15-11 15z" fill="currentColor"/></svg>
+      <h1>Wishlist</h1>
+    </div>
+    <div class="summary" id="summary" aria-live="polite"></div>
+    <div class="menu-wrap">
+      <button class="icon-btn" id="menuBtn" aria-haspopup="true" aria-expanded="false" aria-label="Menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+      </button>
+      <div class="menu" id="menu" role="menu" hidden>
+        <button role="menuitem" data-action="refresh-all">↻ Check all prices</button>
+        <button role="menuitem" data-action="export">⤓ Export wishlist</button>
+        <button role="menuitem" data-action="import">⤒ Import wishlist</button>
+        <button role="menuitem" data-action="bookmarklet">★ Add-from-any-site button</button>
+        <button role="menuitem" data-action="share">⎘ Copy list as text</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <form class="add-bar" id="addForm" autocomplete="off">
+      <input id="urlInput" type="text" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="Paste a product link…" aria-label="Product link" required>
+      <button type="submit" class="primary" id="addBtn">Add</button>
+    </form>
+    <p class="hint" id="hint">Tip: paste a link anywhere on this page to add it.</p>
+
+    <nav class="cats" id="cats" aria-label="Categories"></nav>
+
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search items, brands, tags" aria-label="Search">
+      <select id="sort" aria-label="Sort">
+        <option value="new">Newest</option>
+        <option value="old">Oldest</option>
+        <option value="price-asc">Price: low to high</option>
+        <option value="price-desc">Price: high to low</option>
+        <option value="drops">Biggest price drops</option>
+        <option value="category">Group by category</option>
+        <option value="store">Group by store</option>
+      </select>
+      <label class="toggle"><input type="checkbox" id="showBought"> Show purchased</label>
+    </div>
+    <div class="tags" id="tagBar" aria-label="Filter by tag"></div>
+
+    <section id="list" class="list" aria-live="polite"></section>
+
+    <div class="empty" id="empty" hidden>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 28s-11-6.6-11-15a6 6 0 0 1 11-3.3A6 6 0 0 1 27 13c0 8.4-11 15-11 15z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <h2>Your wishlist is empty</h2>
+      <p>Paste a link from any store. The photo, price, sizes and colors fill in for you, and the item gets sorted into a category.</p>
+    </div>
+  </main>
+
+  <dialog id="editor" class="sheet">
+    <form method="dialog" id="editForm">
+      <header class="sheet-head">
+        <h2>Edit item</h2>
+        <button value="cancel" class="icon-btn" aria-label="Close">✕</button>
+      </header>
+      <div class="sheet-body">
+        <div class="edit-preview"><img id="ePreview" alt="" referrerpolicy="no-referrer"></div>
+        <label>Name<input name="title" required></label>
+        <div class="row">
+          <label>Price<input name="price" inputmode="decimal" placeholder="0.00"></label>
+          <label>Currency<input name="currency" maxlength="3" placeholder="USD"></label>
+          <label>Was<input name="originalPrice" inputmode="decimal" placeholder="—"></label>
+        </div>
+        <div class="row">
+          <label>Brand<input name="brand"></label>
+          <label>Store<input name="store"></label>
+        </div>
+        <label>Photo URL<input name="image" type="url"></label>
+        <div class="thumbs" id="eThumbs"></div>
+        <div class="row">
+          <label>Category<select name="category" id="eCategory"></select></label>
+          <label>Type<input name="subcategory" placeholder="e.g. Sneakers"></label>
+        </div>
+        <label>Tags <small>comma-separated</small><input name="tags"></label>
+        <label>Sizes <small>comma-separated</small><input name="sizes"></label>
+        <label>Colors <small>comma-separated</small><input name="colors"></label>
+        <div class="row">
+          <label>My size<input name="selectedSize" list="eSizeList"></label>
+          <label>My color<input name="selectedColor" list="eColorList"></label>
+        </div>
+        <datalist id="eSizeList"></datalist><datalist id="eColorList"></datalist>
+        <label>Notes<textarea name="notes" rows="2" placeholder="Gift idea for…, wait for sale, etc."></textarea></label>
+        <label>Link<input name="url" type="url" required></label>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="ghost" id="eRefetch">↻ Re-read page</button>
+        <span class="spacer"></span>
+        <button value="cancel" class="ghost">Cancel</button>
+        <button value="save" class="primary" id="eSave">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="bookmarkletDlg" class="sheet small">
+    <form method="dialog">
+      <header class="sheet-head"><h2>Add from any site</h2><button class="icon-btn" aria-label="Close">✕</button></header>
+      <div class="sheet-body">
+        <p>Drag this button to your bookmarks bar. On any product page, click it to add the item here.</p>
+        <p class="center"><a class="bookmarklet" id="bookmarkletLink" href="#">♥ Add to Wishlist</a></p>
+        <p class="muted">On your phone, install this app (Share → Add to Home Screen) and you can share links straight into it from Android's share sheet.</p>
+      </div>
+    </form>
+  </dialog>
+
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
