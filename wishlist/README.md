@@ -2,6 +2,15 @@
 
 Paste a product link from any store. The app pulls the **photo, price, sizes and colors** and files the item under a **category with tags**, so you can sort and filter the list by type.
 
+**Live app:** https://dwigy.github.io/DFG/wishlist/
+
+## Two ways it runs
+
+- **Hosted on GitHub Pages (static):** extraction runs in your browser. Store pages are fetched through public CORS relays (corsproxy.io, allorigins, codetabs, with automatic failover), because browsers can't read other sites directly. No Claude enrichment in this mode, and if all relays are down or a store blocks them, you fill in details by hand.
+- **With the Node server (below):** pages are fetched server-side, Claude enrichment is available, and nothing goes through third-party relays. The front end detects the server automatically.
+
+After changing anything in `lib/`, run `npm run build:web` to rebuild `public/extract.bundle.js`.
+
 ## Run it
 
 ```bash

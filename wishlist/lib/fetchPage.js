@@ -2,6 +2,9 @@
 // server can't be pointed at internal network addresses (SSRF).
 import dns from 'node:dns/promises';
 import net from 'node:net';
+import { FetchError, normalizeUrl } from './url.js';
+
+export { FetchError, normalizeUrl };
 
 const BROWSER_HEADERS = {
   'User-Agent':
@@ -15,13 +18,6 @@ const BROWSER_HEADERS = {
 const MAX_BYTES = 6 * 1024 * 1024;
 const MAX_REDIRECTS = 6;
 const TIMEOUT_MS = 15000;
-
-export class FetchError extends Error {
-  constructor(message, status) {
-    super(message);
-    this.status = status;
-  }
-}
 
 function isPrivateIp(ip) {
   if (net.isIPv4(ip)) {
@@ -67,26 +63,6 @@ async function assertPublicHost(url) {
   }
 }
 
-export function normalizeUrl(input) {
-  let raw = String(input || '').trim();
-  // Pull the first URL out of pasted share text like "Check this out! https://..."
-  const found = raw.match(/https?:\/\/[^\s<>"']+/i);
-  if (found) raw = found[0];
-  else if (!/^[a-z]+:\/\//i.test(raw)) raw = `https://${raw}`;
-  let url;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new FetchError("That doesn't look like a link", 400);
-  }
-  if (!url.hostname.includes('.')) throw new FetchError("That doesn't look like a link", 400);
-  // Strip common tracking params so duplicates are detectable.
-  for (const key of [...url.searchParams.keys()]) {
-    if (/^(utm_|fbclid|gclid|mc_|_ga|ref_?$|igsh|si$)/i.test(key)) url.searchParams.delete(key);
-  }
-  url.hash = '';
-  return url;
-}
 
 /**
  * Fetch a URL with redirect-by-redirect host checks.

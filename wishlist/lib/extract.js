@@ -2,7 +2,7 @@
 // reliable (store APIs, schema.org data, meta tags, then DOM heuristics) and the
 // first good value for each field wins.
 import * as cheerio from 'cheerio';
-import { safeFetch, normalizeUrl, FetchError } from './fetchPage.js';
+import { normalizeUrl, FetchError } from './url.js';
 
 const CURRENCY_SYMBOLS = [
   ['C$', 'CAD'], ['CA$', 'CAD'], ['A$', 'AUD'], ['AU$', 'AUD'], ['NZ$', 'NZD'], ['HK$', 'HKD'],
@@ -111,12 +111,12 @@ function siteName(url) {
 
 // ---------- strategy: Shopify product JSON ----------
 
-async function fromShopify(url, html) {
+async function fromShopify(url, html, fetchPage) {
   const looksShopify = /\/products\/[^/]+/.test(url.pathname) && (!html || /shopify/i.test(html));
   if (!looksShopify) return null;
   const handlePath = url.pathname.match(/^(.*\/products\/[^/?#]+)/)[1].replace(/\.(js|json)$/, '');
   try {
-    const res = await safeFetch(new URL(`${handlePath}.js`, url), { accept: 'application/json', timeoutMs: 8000 });
+    const res = await fetchPage(new URL(`${handlePath}.js`, url), { accept: 'application/json', timeoutMs: 8000 });
     if (res.status !== 200) return null;
     const p = JSON.parse(res.body);
     if (!p || !p.title) return null;
@@ -465,14 +465,16 @@ const BLOCK_SIGNS = /captcha|are you a robot|access denied|request blocked|px-ca
 
 /**
  * Extract product info from a URL.
- * Returns { product, html, blocked, $ } — html/$ let callers run extra passes.
+ * `fetchPage(url, {accept, timeoutMs})` resolves {url, status, contentType, body};
+ * the server passes its SSRF-guarded fetch, the browser build a CORS relay.
+ * Returns { product, $, blocked } — $ lets callers run extra passes.
  */
-export async function extractProduct(input) {
+export async function extractProduct(input, { fetchPage }) {
   const url = normalizeUrl(input);
   let res;
   let fetchError;
   try {
-    res = await safeFetch(url);
+    res = await fetchPage(url);
   } catch (err) {
     if (err instanceof FetchError && err.status === 400) throw err;
     fetchError = err;
@@ -482,7 +484,7 @@ export async function extractProduct(input) {
   const $ = cheerio.load(html || '<html></html>');
   const blocked = !res || res.status >= 400 || (html.length < 200000 && BLOCK_SIGNS.test(html) && !$('script[type="application/ld+json"]').length);
 
-  const shopify = await fromShopify(finalUrl, html);
+  const shopify = await fromShopify(finalUrl, html, fetchPage);
   const parts = blocked && !shopify
     ? [fromMeta($, finalUrl)]
     : [shopify, fromJsonLd($, finalUrl), fromAmazon($, finalUrl), fromMicrodata($, finalUrl), fromMeta($, finalUrl), fromHeuristics($, finalUrl)];

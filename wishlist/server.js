@@ -3,10 +3,9 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { extractProduct, pageText } from './lib/extract.js';
-import { categorize, priceBand } from './lib/categorize.js';
+import { buildItem as buildCore } from './lib/build.js';
 import { aiEnabled, enrichWithClaude, mergeAi } from './lib/ai.js';
-import { FetchError } from './lib/fetchPage.js';
+import { FetchError, safeFetch } from './lib/fetchPage.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
@@ -33,34 +32,8 @@ function rateLimited(ip) {
   return recent.length > 30;
 }
 
-export async function buildItem(url, { useAi = aiEnabled() } = {}) {
-  const { product, $, blocked } = await extractProduct(url);
-  let item = product;
-  const rules = categorize(product);
-  let category = rules.category;
-  let subcategory = rules.subcategory;
-  let tags = rules.tags;
-
-  if (useAi) {
-    const ai = await enrichWithClaude({ product, text: blocked ? '' : pageText($), blocked });
-    if (ai) {
-      item = mergeAi(product, ai);
-      category = ai.category || category;
-      subcategory = ai.subcategory || subcategory;
-      // Keep the rule-derived facts (sale, brand, price band, gender) alongside Claude's descriptive tags.
-      const facts = rules.tags.filter((t) => /^(On Sale|Kids|Women|Men|Unisex)$/.test(t) || t === product.brand);
-      tags = [...ai.tags, ...facts];
-      if (item.price != null) tags.push(priceBand(item.price));
-      tags = tags.filter((t, i) => t && tags.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
-    }
-  }
-
-  const missing = ['price', 'image'].filter((k) => !item[k]);
-  return {
-    item: { ...item, category, subcategory, tags },
-    blocked,
-    missing,
-  };
+export function buildItem(url, { useAi = aiEnabled() } = {}) {
+  return buildCore(url, { fetchPage: safeFetch, enrich: useAi ? enrichWithClaude : undefined, merge: mergeAi });
 }
 
 async function readJson(req) {

@@ -127,7 +127,24 @@ function toast(message, { type = 'info', action, timeout = 4000 } = {}) {
 
 // ---------- API ----------
 
+// With a server (npm start) extraction runs there; on static hosting (GitHub Pages)
+// the same extractor runs in the browser via CORS relays.
+const serverConfig = fetch('api/config')
+  .then((r) => (r.ok && /json/.test(r.headers.get('content-type') || '') ? r.json() : null))
+  .catch(() => null);
+
+let browserExtractor;
+const loadBrowserExtractor = () => (browserExtractor ??= import('./extract.bundle.js'));
+
 async function extract(url, { ai = true } = {}) {
+  if (!(await serverConfig)) {
+    const { extractInBrowser } = await loadBrowserExtractor();
+    try {
+      return await extractInBrowser(url);
+    } catch (err) {
+      throw new Error(err.status === 400 ? err.message : "Couldn't read that link");
+    }
+  }
   const res = await fetch('api/extract', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -720,12 +737,9 @@ render();
   }
 }
 
-fetch('api/config')
-  .then((r) => r.json())
-  .then((cfg) => {
-    if (cfg.ai) document.body.classList.add('ai-on');
-  })
-  .catch(() => {});
+serverConfig.then((cfg) => {
+  if (cfg?.ai) document.body.classList.add('ai-on');
+});
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
