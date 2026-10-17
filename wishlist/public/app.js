@@ -5,6 +5,8 @@
 const STORE_KEY = 'smart-wishlist:v1';
 const PREFS_KEY = 'smart-wishlist:prefs';
 const BIG_GIFT = 250;
+// Optional private relay (see relay/README.md). Empty: public relays only.
+const DEFAULT_RELAY = '';
 
 const CATEGORY_ICONS = {
   Clothing: '👕', Shoes: '👟', 'Bags & Accessories': '👜', 'Jewelry & Watches': '💍', Beauty: '💄',
@@ -55,7 +57,8 @@ function save() {
     toast("Couldn't save in this browser (private mode?). Export a backup to keep your list.", { type: 'error', timeout: 8000 });
   }
 }
-const savePrefs = () => safeStorage.set(PREFS_KEY, { sort: prefs.sort, giftLimit: prefs.giftLimit });
+const savePrefs = () => safeStorage.set(PREFS_KEY, { sort: prefs.sort, giftLimit: prefs.giftLimit, relayUrl: prefs.relayUrl });
+const relayUrl = () => prefs.relayUrl || DEFAULT_RELAY;
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 const byId = (id) => items.find((i) => i.id === id);
@@ -148,7 +151,7 @@ async function extract(url, { ai = true } = {}) {
   if (!(await serverConfig)) {
     const { extractInBrowser } = await loadBrowserExtractor();
     try {
-      return await extractInBrowser(url);
+      return await extractInBrowser(url, { relayUrl: relayUrl() });
     } catch (err) {
       throw new Error(err.status === 400 ? err.message : "Couldn't read that link");
     }
@@ -477,6 +480,15 @@ function optionChips(item, kind) {
   </div>`;
 }
 
+function missingNote(item) {
+  const missing = [item.price == null && 'price', !safeHref(item.image) && 'photo'].filter(Boolean);
+  if (!missing.length) return '';
+  return `<div class="notice">
+    <p>${esc(item.store || 'The store')} didn't share the ${missing.join(' or ')}.</p>
+    <div><button data-act="retry">Try again</button><button data-act="edit">Add it myself</button></div>
+  </div>`;
+}
+
 function renderDetail() {
   const item = byId(state.detailId);
   if (!item) return els.detailDlg.open && els.detailDlg.close();
@@ -503,6 +515,7 @@ function renderDetail() {
         ${change > 0 ? `<span class="bad">Up ${money(change, item.currency)} since you added it</span>` : ''}
         ${item.inStock === false ? '<span class="bad">Sold out</span>' : ''}
       </div>
+      ${missingNote(item)}
       <a class="primary shop-btn" href="${esc(safeHref(item.url))}" target="_blank" rel="noopener noreferrer">Shop at ${esc(item.store || item.domain || 'store')} ↗</a>
       ${optionChips(item, 'sizes')}
       ${optionChips(item, 'colors')}
@@ -519,7 +532,7 @@ function renderDetail() {
         <button data-act="edit">✎ Edit details</button>
         <button data-act="delete" class="danger">Remove</button>
       </div>
-      <p class="muted small">Added ${timeAgo(item.addedAt)}${item.checkedAt ? ` · price checked ${timeAgo(item.checkedAt)}` : ''}</p>
+      <p class="muted small">Added ${timeAgo(item.addedAt)}${item.checkedAt ? ` · price checked ${timeAgo(item.checkedAt)}` : ''}${item.sources?.length ? ` · read from ${esc([item.via, ...item.sources].filter(Boolean).join(', '))}` : ''}</p>
     </div>`;
   wireImages(els.detail);
 }
@@ -608,6 +621,36 @@ els.detail.addEventListener('click', async (e) => {
     els.detailDlg.close();
     render();
     return toast('Removed', { action: { label: 'Undo', run: () => { items.splice(index, 0, item); save(); render(); } }, timeout: 6000 });
+  }
+  if (act === 'retry') {
+    const btn = e.target.closest('[data-act]');
+    btn.disabled = true;
+    btn.textContent = 'Reading…';
+    try {
+      const { item: fresh } = await extract(item.url);
+      // Keep everything the person chose; only fill what was missing or newly found.
+      // If the first read got neither price nor photo, its name and section were
+      // guesses from the link, so take the real ones (unless edited by hand).
+      if (item.price == null && !safeHref(item.image) && !item.updatedAt && (fresh.price != null || fresh.image)) {
+        Object.assign(item, { title: fresh.title, store: fresh.store, category: fresh.category, subcategory: fresh.subcategory, tags: fresh.tags });
+      }
+      if (item.price == null && fresh.price != null) {
+        item.price = fresh.price;
+        item.currency ||= fresh.currency;
+        item.priceHistory = [{ price: fresh.price, at: Date.now() }];
+      }
+      if (!safeHref(item.image) && fresh.image) item.image = fresh.image;
+      item.images = [...new Set([...(item.images || []), ...(fresh.images || [])])];
+      if (!item.sizes?.length) item.sizes = fresh.sizes;
+      if (!item.colors?.length) item.colors = fresh.colors;
+      if (!item.brand) item.brand = fresh.brand;
+      item.via = fresh.via;
+      item.sources = fresh.sources;
+      save();
+      toast(item.price != null && safeHref(item.image) ? 'Got it this time' : 'Still missing some details. You can add them yourself.', { type: item.price != null && safeHref(item.image) ? 'good' : 'warn' });
+    } catch (err) {
+      toast(err.message, { type: 'error' });
+    }
   }
   if (act === 'refresh') {
     const btn = e.target.closest('[data-act]');
@@ -898,6 +941,7 @@ els.importFile.addEventListener('change', async () => {
 });
 
 // ---------- startup ----------
+
 
 render();
 
