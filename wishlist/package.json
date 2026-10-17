@@ -1,0 +1,20 @@
+{
+  "name": "smart-wishlist",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Paste a product link; get photo, price, sizes, colors and a category automatically.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
+    "cheerio": "^1.2.0"
+  }
+}
