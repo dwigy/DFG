@@ -8,9 +8,9 @@ export const CATEGORIES = {
     types: {
       Tops: ['t-shirt', 'tee', 'shirt', 'blouse', 'top', 'tank', 'camisole', 'polo', 'henley', 'bodysuit', 'crop top'],
       Sweaters: ['sweater', 'cardigan', 'pullover', 'jumper', 'knit', 'turtleneck', 'crewneck', 'crew'],
-      Hoodies: ['hoodie', 'sweatshirt', 'zip-up', 'fleece'],
-      Outerwear: ['jacket', 'coat', 'parka', 'puffer', 'blazer', 'vest', 'gilet', 'windbreaker', 'trench', 'anorak', 'raincoat', 'bomber'],
-      Pants: ['pants', 'trousers', 'chinos', 'joggers', 'sweatpants', 'leggings', 'cargo', 'slacks', 'trouser'],
+      Hoodies: ['hoodie', 'hoody', 'hooded', 'sweatshirt', 'zip-up', 'fleece', 'quarter zip', 'half zip'],
+      Outerwear: ['jacket', 'coat', 'parka', 'puffer', 'blazer', 'vest', 'gilet', 'windbreaker', 'trench', 'anorak', 'raincoat', 'bomber', 'shell', 'softshell', 'hardshell', 'shacket', 'overshirt', 'insulated', 'down sweater'],
+      Pants: ['pants', 'trousers', 'chinos', 'joggers', 'sweatpants', 'leggings', 'tights', 'cargo', 'slacks', 'trouser'],
       Jeans: ['jeans', 'denim'],
       Shorts: ['shorts'],
       Dresses: ['dress', 'gown', 'romper', 'jumpsuit', 'sundress'],
@@ -31,6 +31,7 @@ export const CATEGORIES = {
       Heels: ['heel', 'pump', 'stiletto', 'platform', 'wedge'],
       'Flats & Loafers': ['loafer', 'flat', 'ballet flat', 'mule', 'moccasin', 'oxford', 'derby', 'brogue', 'dress shoe'],
       Slippers: ['slipper'],
+      Clogs: ['clog', 'croc'],
     },
     hints: ['shoes', 'shoe', 'footwear'],
   },
@@ -250,7 +251,7 @@ export function categorize(p) {
     .map((h) => h.k)
     .filter((k) => k.length > 2 && !/^(top|tee|flat|pan|pot|cap|print|throw|frame|record|edition|show|class)$/.test(k));
   // Skip keywords that just repeat the type ("Earring" under "Earrings") or a longer keyword ("Shirt" after "T-Shirt").
-  const stem = (s) => s.toLowerCase().replace(/[\s-]+/g, '').replace(/e?s$/, '');
+  const stem = (s) => s.toLowerCase().replace(/[\s-]+/g, '').replace(/e?s$/, '').replace(/y$/, 'i');
   const picked = [];
   for (const k of kwTags) {
     if (picked.length === 2) break;
