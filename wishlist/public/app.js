@@ -5,8 +5,7 @@
 const STORE_KEY = 'smart-wishlist:v1';
 const PREFS_KEY = 'smart-wishlist:prefs';
 const BIG_GIFT = 250;
-// Your Cloudflare relay (see relay/README.md). Set here to use it on every
-// device; a relay saved in the app's menu overrides it on that device.
+// Optional private relay (see relay/README.md). Empty: public relays only.
 const DEFAULT_RELAY = '';
 
 const CATEGORY_ICONS = {
@@ -883,7 +882,6 @@ document.addEventListener('click', () => {
 
 els.menu.addEventListener('click', async (e) => {
   const action = e.target.closest('[data-action]')?.dataset.action;
-  if (action === 'relay') openRelay();
   if (action === 'export') {
     const blob = new Blob([JSON.stringify({ app: 'smart-wishlist', version: 1, exportedAt: new Date().toISOString(), items: items.filter((i) => i.status !== 'loading') }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -942,57 +940,8 @@ els.importFile.addEventListener('change', async () => {
   }
 });
 
-// ---------- your relay ----------
-
-const relayEls = { dlg: $('#relayDlg'), form: $('#relayForm'), input: $('#relayInput'), status: $('#relayStatus') };
-
-function updateRelayMenu() {
-  $('#relayMenuItem').textContent = relayUrl() ? 'Your relay: connected ✓' : 'Connect your relay';
-}
-
-function openRelay() {
-  relayEls.input.value = relayUrl();
-  relayEls.status.textContent = relayUrl() ? 'Connected. Store pages are read through your relay first.' : '';
-  relayEls.status.className = 'relay-status';
-  $('#relayRemove').hidden = !prefs.relayUrl;
-  relayEls.dlg.showModal();
-}
-
-relayEls.dlg.addEventListener('click', (e) => {
-  if (e.target.closest('[data-close]')) relayEls.dlg.close();
-});
-
-relayEls.form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  let value = relayEls.input.value.trim();
-  if (!value) return relayEls.input.focus();
-  if (!/^https?:\/\//i.test(value)) value = `https://${value}`;
-  relayEls.status.className = 'relay-status';
-  relayEls.status.textContent = 'Testing…';
-  const { testRelay } = await loadBrowserExtractor();
-  if (await testRelay(value)) {
-    prefs.relayUrl = value.replace(/\/+$/, '');
-    savePrefs();
-    updateRelayMenu();
-    relayEls.dlg.close();
-    toast('Relay connected ✓', { type: 'good' });
-  } else {
-    relayEls.status.className = 'relay-status bad';
-    relayEls.status.textContent = "Couldn't reach a relay at that address. Check the URL, and that the relay is deployed.";
-  }
-});
-
-$('#relayRemove').addEventListener('click', () => {
-  prefs.relayUrl = '';
-  savePrefs();
-  updateRelayMenu();
-  relayEls.dlg.close();
-  toast('Relay disconnected');
-});
-
 // ---------- startup ----------
 
-updateRelayMenu();
 
 render();
 

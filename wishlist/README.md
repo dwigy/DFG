@@ -7,7 +7,7 @@ Paste a product link from any store. The app pulls the **photo, price, sizes and
 ## Two ways it runs
 
 - **Hosted on GitHub Pages (static):** extraction runs in your browser, and pages are fetched through public relays. Jina Reader goes first because it loads the page in a real browser, so prices and photos that stores add with JavaScript are included. AllOrigins, CodeTabs and corsproxy.io are backups (corsproxy.io's free tier only works on localhost). If a relay returns a block page, the next one is tried and the most complete result wins. Remaining gaps are filled from Jina's text version of the page and Microlink's metadata. Items still missing a price or photo get a "Try again" button. There's no Claude enrichment in this mode.
-- **Your own relay (recommended):** a free Cloudflare Worker that only your app can use. It's tried before the public relays. Setup takes about 5 minutes; see [relay/README.md](relay/README.md).
+- **Optional private relay:** `relay/` has a Cloudflare Worker that only your app can use. It isn't set up; deploying it means creating a Cloudflare account, then setting `DEFAULT_RELAY` in `public/app.js`. See [relay/README.md](relay/README.md).
 - **With the Node server (below):** pages are fetched server-side, Claude enrichment is available, and nothing goes through third-party relays. The front end detects the server automatically.
 
 After changing anything in `lib/`, run `npm run build:web` to rebuild `public/extract.bundle.js`.
