@@ -1,6 +1,6 @@
 // Network-first app shell cache so the list opens offline. API calls are never cached.
-const CACHE = 'wishlist-shell-v5';
-const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'icon.svg', 'manifest.webmanifest', 'extract.bundle.js'];
+const CACHE = 'wishlist-shell-v6';
+const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'icon.svg', 'manifest.webmanifest', 'extract.bundle.js', 'bookmarklet.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

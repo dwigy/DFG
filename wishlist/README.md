@@ -4,9 +4,10 @@ Paste a product link from any store. The app pulls the **photo, price, sizes and
 
 **Live app:** https://dwigy.github.io/DFG/wishlist/
 
-## Two ways it runs
+## How it reads pages
 
 - **Hosted on GitHub Pages (static):** extraction runs in your browser, and pages are fetched through public relays. Jina Reader goes first because it loads the page in a real browser, so prices and photos that stores add with JavaScript are included. AllOrigins, CodeTabs and corsproxy.io are backups (corsproxy.io's free tier only works on localhost). If a relay returns a block page, the next one is tried and the most complete result wins. Remaining gaps are filled from Jina's text version of the page and Microlink's metadata. Items still missing a price or photo get a "Try again" button. There's no Claude enrichment in this mode.
+- **Add to Wishlist button (for stores that block apps, like REI):** a bookmark that runs on the product page you're viewing. It captures the product details (structured data, meta tags, title, price, size and color pickers, photos) in your own browser, compresses them, and opens the wishlist with that snapshot in the URL fragment, which never leaves your device. The app reads it with the same extractor, so bot protection doesn't apply. Tapping it on an item that's already on your list fills in what's missing. Set it up from ⋯ → **Add to Wishlist button** (instructions for iPhone, computer and Android).
 - **Optional private relay:** `relay/` has a Cloudflare Worker that only your app can use. It isn't set up; deploying it means creating a Cloudflare account, then setting `DEFAULT_RELAY` in `public/app.js`. See [relay/README.md](relay/README.md).
 - **With the Node server (below):** pages are fetched server-side, Claude enrichment is available, and nothing goes through third-party relays. The front end detects the server automatically.
 

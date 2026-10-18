@@ -12,7 +12,7 @@
 // first. Each relay is tried until one yields a complete item; otherwise the
 // most complete result wins.
 import { buildItem } from '../lib/build.js';
-import { FetchError } from '../lib/url.js';
+import { FetchError, normalizeUrl } from '../lib/url.js';
 import { parsePrice, detectCurrency } from '../lib/extract.js';
 
 const enc = encodeURIComponent;
@@ -211,4 +211,26 @@ export async function testRelay(relayUrl) {
   } catch {
     return false;
   }
+}
+
+/**
+ * Build an item from a snapshot of the product page taken in the shopper's own
+ * browser (the "Add to Wishlist" button). Nothing is fetched for the page
+ * itself; other requests (e.g. Shopify's product JSON) still use the relays.
+ */
+export async function extractFromHtml(url, html, { relayUrl } = {}) {
+  const page = normalizeUrl(url);
+  const relays = relayUrl ? [ownRelay(relayUrl), ...RELAYS] : RELAYS;
+  const viaRelays = fetcherFor(relays.find((r) => !r.rendered), relays);
+  const result = await buildItem(page.href, {
+    fetchPage: async (input, opts) => {
+      const u = input instanceof URL ? input : new URL(input);
+      if (u.href === page.href) return { url: u, status: 200, contentType: 'text/html', body: html };
+      return viaRelays(u, opts);
+    },
+  });
+  result.item.via = 'your browser';
+  result.blocked = false;
+  result.missing = ['price', 'image'].filter((k) => result.item[k] == null || result.item[k] === '');
+  return result;
 }

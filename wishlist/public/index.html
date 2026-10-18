@@ -34,7 +34,7 @@
         <div class="menu" id="menu" role="menu" hidden>
           <button role="menuitem" data-action="refresh-all">Check all prices</button>
           <button role="menuitem" data-action="share">Copy list to share</button>
-          <button role="menuitem" data-action="bookmarklet">Add from any website</button>
+          <button role="menuitem" data-action="bookmarklet">Add to Wishlist button</button>
           <hr>
           <button role="menuitem" data-action="export">Export backup</button>
           <button role="menuitem" data-action="import">Import backup</button>
@@ -140,11 +140,34 @@
 
   <dialog id="bookmarkletDlg" class="sheet small">
     <form method="dialog">
-      <header class="sheet-head"><h2>Add from any website</h2><button class="icon-btn" aria-label="Close">✕</button></header>
+      <header class="sheet-head"><h2>Add to Wishlist button</h2><button class="icon-btn" aria-label="Close">✕</button></header>
       <div class="sheet-body">
-        <p>Drag this button to your browser's bookmarks bar. On any product page, click it to add that item.</p>
-        <p class="center"><a class="primary pill" id="bookmarkletLink" href="#">♥ Add to Wishlist</a></p>
-        <p class="muted">On a phone: open this site, tap Share → Add to Home Screen. On Android you can then share product links straight into the app.</p>
+        <p>Some stores, like REI, block apps from reading their pages. This button reads the product page you're looking at, in your own browser, so it works on any store.</p>
+        <details open>
+          <summary>iPhone or iPad (Safari)</summary>
+          <ol>
+            <li>Tap <b>Copy button code</b> below.</li>
+            <li>Tap the Share button, then <b>Add Bookmark</b> → <b>Save</b>.</li>
+            <li>Open Bookmarks (the book icon), tap <b>Edit</b>, then tap the bookmark you just saved.</li>
+            <li>Rename it <b>Add to Wishlist</b>. Clear the address, paste, then tap <b>Done</b>.</li>
+          </ol>
+          <p class="muted small">To use it: on a product page, tap the address bar, type <b>Add to Wishlist</b> and tap the bookmark. Or open Bookmarks and tap it.</p>
+          <button type="button" class="primary" id="copyBookmarklet">Copy button code</button>
+        </details>
+        <details>
+          <summary>Computer (Chrome, Safari, Edge, Firefox)</summary>
+          <p>Drag this button onto your bookmarks bar. Show the bar with Ctrl+Shift+B (Cmd+Shift+B on a Mac) if you don't see it.</p>
+          <p class="center"><a class="primary pill" id="bookmarkletLink" href="#">♥ Add to Wishlist</a></p>
+        </details>
+        <details>
+          <summary>Android (Chrome)</summary>
+          <ol>
+            <li>Tap <b>Copy button code</b> above, then bookmark any page with ☆.</li>
+            <li>Edit that bookmark: name it <b>Add to Wishlist</b> and paste the code as its URL.</li>
+            <li>To use it: on a product page, type <b>Add to Wishlist</b> in the address bar and tap the bookmark in the suggestions.</li>
+          </ol>
+        </details>
+        <p class="muted small">Tapping it on a page that's already on your list fills in any missing price, photo, sizes and colors.</p>
       </div>
     </form>
   </dialog>

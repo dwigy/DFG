@@ -391,9 +391,16 @@ function fromHeuristics($, url) {
     .map((_, el) => absUrl($(el).attr('data-zoom-image') || $(el).attr('data-src') || $(el).attr('src') || $(el).attr('srcset'), url))
     .get();
 
+  // Brand links/labels next to the product title (e.g. "Arc'teryx" above the name on REI).
+  const brand = $('[itemprop="brand"], [class*="product-brand" i], [class*="brand-name" i], [data-ui*="brand" i], [data-testid*="brand" i], [class*="product"] [class*="brand" i]')
+    .map((_, el) => clean($(el).attr('content') || $(el).text()))
+    .get()
+    .find((t) => t && t.length <= 40 && !/^(brand|brands|shop|all brands)$/i.test(t));
+
   return {
     source: 'heuristics',
     title: clean($('h1').first().text()),
+    brand,
     price: parsePrice(priceText),
     currency: detectCurrency(priceText),
     images: mainImg,

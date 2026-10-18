@@ -2,6 +2,8 @@
 // Items live in localStorage; product pages are read by the server or, on static
 // hosting, by the in-browser extractor.
 
+import { bookmarkletCode, readSnapshot } from './bookmarklet.js';
+
 const STORE_KEY = 'smart-wishlist:v1';
 const PREFS_KEY = 'smart-wishlist:prefs';
 const BIG_GIFT = 250;
@@ -147,7 +149,12 @@ const serverConfig = fetch('api/config')
 let browserExtractor;
 const loadBrowserExtractor = () => (browserExtractor ??= import('./extract.bundle.js'));
 
-async function extract(url, { ai = true } = {}) {
+async function extract(url, { ai = true, html } = {}) {
+  if (html) {
+    // A page snapshot from the "Add to Wishlist" button: read it in the browser.
+    const { extractFromHtml } = await loadBrowserExtractor();
+    return extractFromHtml(url, html, { relayUrl: relayUrl() });
+  }
   if (!(await serverConfig)) {
     const { extractInBrowser } = await loadBrowserExtractor();
     try {
@@ -178,7 +185,26 @@ const sameUrl = (a, b) => {
   return norm(a) === norm(b);
 };
 
-async function addUrl(raw) {
+// From the "Add to Wishlist" button: the product page as the shopper's browser saw it.
+async function addFromSnapshot({ url, html }) {
+  if (!html) return addUrl(url);
+  const dup = items.find((i) => i.status !== 'loading' && sameUrl(i.url, url));
+  if (dup) {
+    try {
+      const { item: fresh } = await extract(url, { html });
+      fillFrom(dup, fresh);
+      save();
+      render();
+      toast('Filled in from the page', { type: 'good', action: { label: 'View', run: () => openDetail(dup.id) } });
+    } catch {
+      toast('Already on your list', { action: { label: 'View', run: () => openDetail(dup.id) } });
+    }
+    return;
+  }
+  return addUrl(url, { html });
+}
+
+async function addUrl(raw, { html } = {}) {
   const text = String(raw || '').trim();
   const match = text.match(/https?:\/\/[^\s<>"']+/i);
   const url = match ? match[0] : text;
@@ -192,7 +218,7 @@ async function addUrl(raw) {
   items.unshift(placeholder);
   render();
   try {
-    const { item, blocked, missing } = await extract(url);
+    const { item, blocked, missing } = await extract(url, { html });
     Object.assign(placeholder, item, {
       status: 'ready',
       tags: item.tags || [],
@@ -204,7 +230,7 @@ async function addUrl(raw) {
     save();
     render();
     const view = { label: 'View', run: () => openDetail(placeholder.id) };
-    if (blocked) toast(`${item.store} didn't share its details. Add the price and photo yourself.`, { type: 'warn', timeout: 7000, action: { label: 'Edit', run: () => openEditor(placeholder.id) } });
+    if (blocked) toast(`${item.store} blocks automatic reading. Use the Add to Wishlist button on the product page to fill it in.`, { type: 'warn', timeout: 7000, action: { label: 'Edit', run: () => openEditor(placeholder.id) } });
     else if (missing.length) toast(`Added, but couldn't find the ${missing.join(' or ')}.`, { type: 'warn', action: { label: 'Edit', run: () => openEditor(placeholder.id) } });
     else toast(`Added to ${item.category}`, { action: view });
   } catch (err) {
@@ -212,6 +238,30 @@ async function addUrl(raw) {
     render();
     toast(err.message || "Couldn't read that link", { type: 'error', timeout: 6000 });
   }
+}
+
+// Fill what an item is missing from a fresh read, keeping everything the person
+// chose. If the first read got neither price nor photo, its name and section were
+// guesses from the link, so take the real ones (unless edited by hand).
+function fillFrom(item, fresh) {
+  if (item.price == null && !safeHref(item.image) && !item.updatedAt && (fresh.price != null || fresh.image)) {
+    Object.assign(item, { title: fresh.title, brand: fresh.brand, store: fresh.store, category: fresh.category, subcategory: fresh.subcategory, tags: fresh.tags });
+  }
+  if (item.price == null && fresh.price != null) {
+    item.price = fresh.price;
+    item.currency ||= fresh.currency;
+    item.priceHistory = [{ price: fresh.price, at: Date.now() }];
+  }
+  if (fresh.originalPrice && !item.originalPrice) item.originalPrice = fresh.originalPrice;
+  if (!safeHref(item.image) && fresh.image) item.image = fresh.image;
+  item.images = [...new Set([...(item.images || []), ...(fresh.images || [])])];
+  if (!item.sizes?.length) item.sizes = fresh.sizes;
+  if (!item.colors?.length) item.colors = fresh.colors;
+  if (!item.selectedSize && fresh.selectedSize) item.selectedSize = fresh.selectedSize;
+  if (!item.selectedColor && fresh.selectedColor) item.selectedColor = fresh.selectedColor;
+  if (!item.brand) item.brand = fresh.brand;
+  item.via = fresh.via;
+  item.sources = fresh.sources;
 }
 
 async function refreshPrice(item, { quiet = false } = {}) {
@@ -486,6 +536,7 @@ function missingNote(item) {
   return `<div class="notice">
     <p>${esc(item.store || 'The store')} didn't share the ${missing.join(' or ')}.</p>
     <div><button data-act="retry">Try again</button><button data-act="edit">Add it myself</button></div>
+    <p class="tip">Faster: open <a href="${esc(safeHref(item.url))}" target="_blank" rel="noopener noreferrer">the product page</a> and tap your <a href="#" data-act="howto">Add to Wishlist button</a>. It fills this in from the page.</p>
   </div>`;
 }
 
@@ -622,30 +673,18 @@ els.detail.addEventListener('click', async (e) => {
     render();
     return toast('Removed', { action: { label: 'Undo', run: () => { items.splice(index, 0, item); save(); render(); } }, timeout: 6000 });
   }
+  if (act === 'howto') {
+    e.preventDefault();
+    els.detailDlg.close();
+    return openBookmarklet();
+  }
   if (act === 'retry') {
     const btn = e.target.closest('[data-act]');
     btn.disabled = true;
     btn.textContent = 'Reading…';
     try {
       const { item: fresh } = await extract(item.url);
-      // Keep everything the person chose; only fill what was missing or newly found.
-      // If the first read got neither price nor photo, its name and section were
-      // guesses from the link, so take the real ones (unless edited by hand).
-      if (item.price == null && !safeHref(item.image) && !item.updatedAt && (fresh.price != null || fresh.image)) {
-        Object.assign(item, { title: fresh.title, store: fresh.store, category: fresh.category, subcategory: fresh.subcategory, tags: fresh.tags });
-      }
-      if (item.price == null && fresh.price != null) {
-        item.price = fresh.price;
-        item.currency ||= fresh.currency;
-        item.priceHistory = [{ price: fresh.price, at: Date.now() }];
-      }
-      if (!safeHref(item.image) && fresh.image) item.image = fresh.image;
-      item.images = [...new Set([...(item.images || []), ...(fresh.images || [])])];
-      if (!item.sizes?.length) item.sizes = fresh.sizes;
-      if (!item.colors?.length) item.colors = fresh.colors;
-      if (!item.brand) item.brand = fresh.brand;
-      item.via = fresh.via;
-      item.sources = fresh.sources;
+      fillFrom(item, fresh);
       save();
       toast(item.price != null && safeHref(item.image) ? 'Got it this time' : 'Still missing some details. You can add them yourself.', { type: item.price != null && safeHref(item.image) ? 'good' : 'warn' });
     } catch (err) {
@@ -892,9 +931,7 @@ els.menu.addEventListener('click', async (e) => {
   }
   if (action === 'import') els.importFile.click();
   if (action === 'bookmarklet') {
-    const origin = location.origin + location.pathname.replace(/[^/]*$/, '');
-    $('#bookmarkletLink').href = `javascript:(()=>{window.open(${JSON.stringify(origin)}+'?add='+encodeURIComponent(location.href),'_blank')})()`;
-    $('#bookmarkletDlg').showModal();
+    openBookmarklet();
   }
   if (action === 'share') {
     const lines = wanted().map((i) => `• ${i.title}${i.price != null ? ` — ${money(i.price, i.currency)}` : ''}${i.selectedSize ? ` · size ${i.selectedSize}` : ''}${i.selectedColor ? ` · ${i.selectedColor}` : ''}\n  ${i.url}`);
@@ -940,12 +977,45 @@ els.importFile.addEventListener('change', async () => {
   }
 });
 
+// ---------- "Add to Wishlist" browser button ----------
+
+function appAddress() {
+  return location.origin + location.pathname.replace(/[^/]*$/, '');
+}
+
+function openBookmarklet() {
+  const code = bookmarkletCode(appAddress());
+  $('#bookmarkletLink').href = code;
+  $('#bookmarkletDlg').showModal();
+}
+
+$('#copyBookmarklet').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(bookmarkletCode(appAddress()));
+    toast('Button code copied');
+  } catch {
+    toast("Couldn't copy. Long-press the button above and copy its link instead.", { type: 'warn' });
+  }
+});
+
+$('#bookmarkletLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  toast('Drag this button to your bookmarks bar, then use it on a product page.', { timeout: 5000 });
+});
+
 // ---------- startup ----------
 
 
 render();
 
-// ?add=URL (bookmarklet) or share-target params (?url= / ?text=)
+// A page snapshot from the "Add to Wishlist" button (#import=…&z=…).
+if (location.hash.startsWith('#import=')) {
+  const hash = location.hash;
+  history.replaceState(null, '', location.pathname + '#shop');
+  readSnapshot(hash).then((snap) => snap && addFromSnapshot(snap));
+}
+
+// ?add=URL (older bookmarklet) or share-target params (?url= / ?text=)
 {
   const params = new URLSearchParams(location.search);
   const incoming = params.get('add') || params.get('url') || params.get('text');

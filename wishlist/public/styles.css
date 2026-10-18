@@ -368,3 +368,10 @@ dialog::backdrop { background: rgb(0 0 0 / 0.5); backdrop-filter: blur(2px); }
 }
 
 .sheet-body a { color: var(--brand); }
+
+.notice .tip { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--muted); }
+.notice .tip a { color: var(--text); font-weight: 600; }
+.sheet-body details { border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+.sheet-body summary { font-weight: 650; cursor: pointer; }
+.sheet-body ol { margin: 10px 0; padding-left: 20px; display: grid; gap: 6px; }
+.sheet-body details .primary { width: 100%; margin-top: 4px; }
